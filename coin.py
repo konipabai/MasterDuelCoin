@@ -21,6 +21,8 @@ head_coin_sum = 0
 tail_coin_sum = 0
 desktop_global_resize_w_zoom = 0
 desktop_global_resize_h_zoom = 0
+is_head = False
+is_head_time = 0
 root = tk.Tk()
 show_text = tk.StringVar()
 
@@ -33,9 +35,9 @@ def get_window_screen_shot_image(hwnd: int):
     # 无法找到游戏进程,不进行操作
     if not hwnd or hwnd <= 0 or len(app) == 0:
         return False
-    isiconic = win32gui.IsIconic(hwnd)
+    is_iconic = win32gui.IsIconic(hwnd)
     # 游戏处于最小化窗口状态, 无法获取屏幕图像, 不执行操作
-    if isiconic:
+    if is_iconic:
         return False
 
     left, top, right, bot = win32gui.GetClientRect(hwnd)
@@ -98,16 +100,15 @@ def cut_master_duel_coin_message_image(hwnd):
     if not img:
         return False
     box = (
-        int(w * desktop_global_resize_w_zoom / 4),
-        int(h * desktop_global_resize_h_zoom / 2 + h * desktop_global_resize_w_zoom / 8),
-        int(w * desktop_global_resize_w_zoom / 4 * 3),
-        int(h * desktop_global_resize_h_zoom / 2 + h * desktop_global_resize_h_zoom / 8 + h * desktop_global_resize_h_zoom / 12)
+        int(w * desktop_global_resize_w_zoom / 2 - w * desktop_global_resize_w_zoom / 16),
+        int(h * desktop_global_resize_h_zoom / 2 - h * desktop_global_resize_h_zoom / 9),
+        int(w * desktop_global_resize_w_zoom / 2 + w * desktop_global_resize_w_zoom / 16),
+        int(h * desktop_global_resize_h_zoom / 2 + h * desktop_global_resize_h_zoom / 9)
     )
     img = img.crop(box)
     # img.show()
     # img.save("img_MasterDuel" + str(num) + ".png")
     # num += 1
-    # print(img)
     return img
 
 
@@ -133,21 +134,21 @@ def get_coin_message_dhash(coin):
 
 # 和赢硬币对比是否相似
 def judge_head_coin_message(message):
-    if message >= 0.97:
+    if message >= 0.92:
         return True
     return False
 
 
 # 和输硬币对比是否相似
 def judge_tail_coin_message(message):
-    if message >= 0.96:
+    if message >= 0.92:
         return True
     return False
 
 
 # 对比的代码
 def comparison_coin():
-    global tail_coin_sum, head_coin_sum, show_text
+    global tail_coin_sum, head_coin_sum, show_text, is_head, is_head_time
     # global num
     hwnd = find_master_duel("masterduel")
     coin = cut_master_duel_coin_message_image(hwnd)
@@ -156,20 +157,32 @@ def comparison_coin():
         start()
     else:
         message = 1 - get_hamming_dist(get_coin_message_dhash("./headCoin.png"), get_dhash(coin)) * 1. / (32 * 32 / 4)
-        # print("先   ", message)
-        if judge_head_coin_message(message):
+        # if is_head is True:
+        #     print("先   ", message)
+        if judge_head_coin_message(message) and is_head is False:
+            is_head_time = time.time() + 4
+            time.sleep(1)
+            is_head = True
+        elif judge_head_coin_message(message) and is_head is True:
+            is_head = False
             head_coin_sum += 1
             text_str = "赢硬币:" + str(head_coin_sum) + "    输硬币:" + str(tail_coin_sum)
             show_text.set(text_str)
             time.sleep(8)
         else:
-            # print("后   ", message)
             message = 1 - get_hamming_dist(get_coin_message_dhash("./tailCoin.png"), get_dhash(coin)) * 1. / (32 * 32 / 4)
+            # print("后   ", message)
             if judge_tail_coin_message(message):
+                is_head = False
                 tail_coin_sum += 1
                 text_str = "赢硬币:" + str(head_coin_sum) + "    输硬币:" + str(tail_coin_sum)
                 show_text.set(text_str)
                 time.sleep(8)
+            elif is_head is True:
+                is_head_time_now = time.time()
+                if is_head_time_now >= is_head_time:
+                    is_head = False
+                    is_head_time = 0
         start()
 
 
@@ -239,7 +252,7 @@ def tk_gui():
 
 # 启动
 def start():
-    p = th.Timer(0.1, comparison_coin)
+    p = th.Timer(0.05, comparison_coin)
     p.setDaemon(True)
     p.start()
 
