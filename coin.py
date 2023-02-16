@@ -158,7 +158,7 @@ def comparison_coin():
     else:
         message = 1 - get_hamming_dist(get_coin_message_dhash("./headCoin.png"), get_dhash(coin)) * 1. / (32 * 32 / 4)
         # if is_head is True:
-        #     print("先   ", message)
+        #     print("赢   ", message, end="\t")
         if judge_head_coin_message(message) and is_head is False:
             is_head_time = time.time() + 4
             time.sleep(1)
@@ -169,16 +169,16 @@ def comparison_coin():
             text_str = "赢硬币:" + str(head_coin_sum) + "    输硬币:" + str(tail_coin_sum)
             show_text.set(text_str)
             time.sleep(8)
-        else:
+        elif is_head is True:
             message = 1 - get_hamming_dist(get_coin_message_dhash("./tailCoin.png"), get_dhash(coin)) * 1. / (32 * 32 / 4)
-            # print("后   ", message)
+            # print("输   ", message)
             if judge_tail_coin_message(message):
                 is_head = False
                 tail_coin_sum += 1
                 text_str = "赢硬币:" + str(head_coin_sum) + "    输硬币:" + str(tail_coin_sum)
                 show_text.set(text_str)
                 time.sleep(8)
-            elif is_head is True:
+            else:
                 is_head_time_now = time.time()
                 if is_head_time_now >= is_head_time:
                     is_head = False
