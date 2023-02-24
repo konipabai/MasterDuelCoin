@@ -1,4 +1,3 @@
-import base64
 import time
 import win32api
 import win32gui
@@ -9,14 +8,12 @@ from ctypes import windll
 from PIL import Image
 import tkinter as tk
 import threading as th
-import os
 import dhash
-import tailCoin
-import headCoin
 from configparser import ConfigParser
 import webbrowser
 
 # num = 0
+p = ""
 w = 0
 h = 0
 head_coin_sum = 0
@@ -25,12 +22,14 @@ desktop_global_resize_w_zoom = 0
 desktop_global_resize_h_zoom = 0
 is_head = False
 is_head_time = 0
+head_coin_dhash = ""
+tail_coin_dhash = ""
 root = tk.Tk()
 show_text = tk.StringVar()
 conf = ConfigParser()
 top_tk = 1
 width_tk = 213
-height_tk = 130
+height_tk = 125
 width_win = 1
 height_win = 1
 font_size = 9
@@ -114,7 +113,6 @@ def find_master_duel(program_name):
 
 # 截取游戏抛硬币时的部分界面
 def cut_master_duel_coin_message_image(hwnd):
-    global w, h, desktop_global_resize_h_zoom, desktop_global_resize_w_zoom
     # global num
     img = get_window_screen_shot_image(hwnd)
     if not img:
@@ -126,7 +124,6 @@ def cut_master_duel_coin_message_image(hwnd):
         int(h * desktop_global_resize_h_zoom / 2 + h * desktop_global_resize_h_zoom / 9)
     )
     img = img.crop(box)
-    # img.show()
     # img.save("img_MasterDuel" + str(num) + ".png")
     # num += 1
     return img
@@ -148,8 +145,8 @@ def get_dhash(img):
 # 得到本地图片的dhash值
 def get_coin_message_dhash(coin):
     img = Image.open(coin)
-    head_coin_dhash = get_dhash(img)
-    return head_coin_dhash
+    coin_dhash = get_dhash(img)
+    return coin_dhash
 
 
 # 和赢硬币对比是否相似
@@ -176,7 +173,7 @@ def comparison_coin():
     if not coin:
         start()
     else:
-        message = 1 - get_hamming_dist(get_coin_message_dhash("./headCoin.png"), get_dhash(coin)) * 1. / (32 * 32 / 4)
+        message = 1 - get_hamming_dist(head_coin_dhash, get_dhash(coin)) * 1. / (32 * 32 / 4)
         # if is_head is True:
         #     print("赢   ", message, end="\t")
         if judge_head_coin_message(message) and is_head is False:
@@ -190,7 +187,7 @@ def comparison_coin():
             show_text.set(text_str)
             time.sleep(5)
         elif is_head is True:
-            message = 1 - get_hamming_dist(get_coin_message_dhash("./tailCoin.png"), get_dhash(coin)) * 1. / (32 * 32 / 4)
+            message = 1 - get_hamming_dist(tail_coin_dhash, get_dhash(coin)) * 1. / (32 * 32 / 4)
             # print("输   ", message)
             if judge_tail_coin_message(message):
                 is_head = False
@@ -208,7 +205,7 @@ def comparison_coin():
 
 # 增加一次赢硬币的按钮
 def head_coin_add():
-    global tail_coin_sum, head_coin_sum, show_text
+    global head_coin_sum
     head_coin_sum += 1
     text_str = "赢硬币:" + str(head_coin_sum) + "   输硬币:" + str(tail_coin_sum)
     show_text.set(text_str)
@@ -216,7 +213,7 @@ def head_coin_add():
 
 # 减少一次赢硬币的按钮
 def head_coin_minus():
-    global tail_coin_sum, head_coin_sum, show_text
+    global head_coin_sum
     if head_coin_sum - 1 >= 0:
         head_coin_sum -= 1
         text_str = "赢硬币:" + str(head_coin_sum) + "   输硬币:" + str(tail_coin_sum)
@@ -225,7 +222,7 @@ def head_coin_minus():
 
 # 增加一次输硬币的按钮
 def tail_coin_add():
-    global tail_coin_sum, head_coin_sum, show_text
+    global tail_coin_sum
     tail_coin_sum += 1
     text_str = "赢硬币:" + str(head_coin_sum) + "   输硬币:" + str(tail_coin_sum)
     show_text.set(text_str)
@@ -233,7 +230,7 @@ def tail_coin_add():
 
 # 减少一次输硬币的按钮
 def tail_coin_minus():
-    global tail_coin_sum, head_coin_sum, show_text
+    global tail_coin_sum
     if tail_coin_sum - 1 >= 0:
         tail_coin_sum -= 1
         text_str = "赢硬币:" + str(head_coin_sum) + "   输硬币:" + str(tail_coin_sum)
@@ -242,7 +239,7 @@ def tail_coin_minus():
 
 # 是否置顶
 def is_top():
-    global conf, top_tk, root
+    global top_tk
     if top_tk == 0:
         top_tk = 1
     else:
@@ -255,7 +252,6 @@ def is_top():
 
 # 字体重设大小
 def set_font():
-    global lb, head_coin_add_button, tail_coin_add_button, head_coin_minus_button, tail_coin_minus_button, top_button, font_add_button, font_minus_button, bug_text, bili_button, github_button
     lb['font'] = ('Microsoft Yahei', font_size + 2)
     head_coin_add_button['font'] = ('Microsoft Yahei', font_size)
     tail_coin_add_button['font'] = ('Microsoft Yahei', font_size)
@@ -271,7 +267,7 @@ def set_font():
 
 # 字体增大
 def font_add():
-    global conf, font_size
+    global font_size
     font_size += 1
     conf.set('user', 'font_size', str(font_size))
     with open('save.INI', 'w', encoding='utf-8') as f1:
@@ -281,7 +277,7 @@ def font_add():
 
 # 字体减小
 def font_minus():
-    global conf, font_size
+    global font_size
     if font_size > 1:
         font_size -= 1
         conf.set('user', 'font_size', str(font_size))
@@ -302,7 +298,6 @@ def github():
 
 # 关闭按钮触发存储位置大小
 def size():
-    global conf, root
     conf.set('user', 'width_win', str(root.winfo_x()))
     conf.set('user', 'height_win', str(root.winfo_y()))
     conf.set('user', 'width_tk', str(root.winfo_width()))
@@ -314,7 +309,7 @@ def size():
 
 # GUI
 def tk_gui():
-    global root, show_text, top_tk, width_tk, height_tk, width_win, height_win, font_size, lb, head_coin_add_button, tail_coin_add_button, head_coin_minus_button, tail_coin_minus_button, top_button, font_add_button, font_minus_button, bug_text, bili_button, github_button
+    global lb, head_coin_add_button, tail_coin_add_button, head_coin_minus_button, tail_coin_minus_button, top_button, font_add_button, font_minus_button, bug_text, bili_button, github_button
     text_str = "赢硬币:0   输硬币:0"
     root.title("硬币统计")
     show_text.set(text_str)
@@ -345,8 +340,10 @@ def tk_gui():
 
     bug_text = tk.Label(root, text="反馈bug:", font=('Microsoft Yahei', font_size + 1))
     bug_text.grid(row=4, column=0, pady=3)
+
     bili_button = tk.Button(root, text='B站链接', command=bili, font=('Microsoft Yahei', font_size))
     bili_button.grid(row=4, column=1, pady=3)
+
     github_button = tk.Button(root, text='github链接', command=github, font=('Microsoft Yahei', font_size))
     github_button.grid(row=4, column=2, pady=3)
 
@@ -358,14 +355,15 @@ def tk_gui():
 
 # 启动
 def start():
+    global p
     p = th.Timer(0.15, comparison_coin)
     p.setDaemon(True)
     p.start()
 
 
-# 读取用户的初始化数据
+# 读取用户的初始化数据和加载要对比的硬币图片的dhash
 def read_ini():
-    global conf, top_tk, width_tk, height_tk, width_win, height_win, font_size
+    global top_tk, width_tk, height_tk, width_win, height_win, font_size, head_coin_dhash, tail_coin_dhash
     conf.read('save.INI', encoding='UTF-8')
     top_tk = int(conf['user']['top_tk'])
     width_tk = conf['user']['width_tk']
@@ -373,15 +371,11 @@ def read_ini():
     width_win = conf['user']['width_win']
     height_win = conf['user']['height_win']
     font_size = int(conf['user']['font_size'])
+    head_coin_dhash = get_coin_message_dhash("./headCoin.png")
+    tail_coin_dhash = get_coin_message_dhash("./tailCoin.png")
 
 
 if __name__ == '__main__':
-    with open(r'./headCoin.png', 'wb') as f:
-        f.write(base64.b64decode(headCoin.true))
-    with open(r'./tailCoin.png', 'wb') as f:
-        f.write(base64.b64decode(tailCoin.false))
     read_ini()
     start()
     tk_gui()
-    os.remove('./headCoin.png')
-    os.remove('./tailCoin.png')
