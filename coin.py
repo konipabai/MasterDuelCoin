@@ -371,8 +371,8 @@ def read_ini():
     width_win = conf['user']['width_win']
     height_win = conf['user']['height_win']
     font_size = int(conf['user']['font_size'])
-    head_coin_dhash = get_coin_message_dhash("./headCoin.png")
-    tail_coin_dhash = get_coin_message_dhash("./tailCoin.png")
+    head_coin_dhash = get_coin_message_dhash("./image/headCoin.png")
+    tail_coin_dhash = get_coin_message_dhash("./image/tailCoin.png")
 
 
 if __name__ == '__main__':
