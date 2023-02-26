@@ -149,15 +149,8 @@ def get_coin_message_dhash(coin):
     return coin_dhash
 
 
-# 和赢硬币对比是否相似
-def judge_head_coin_message(message):
-    if message >= 0.92:
-        return True
-    return False
-
-
-# 和输硬币对比是否相似
-def judge_tail_coin_message(message):
+# 和硬币对比是否相似
+def judge_coin_message(message):
     if message >= 0.92:
         return True
     return False
@@ -176,11 +169,11 @@ def comparison_coin():
         message = 1 - get_hamming_dist(head_coin_dhash, get_dhash(coin)) * 1. / (32 * 32 / 4)
         # if is_head is True:
         #     print("赢   ", message, end="\t")
-        if judge_head_coin_message(message) and is_head is False:
+        if judge_coin_message(message) and is_head is False:
             is_head_time = time.time() + 4
             time.sleep(1)
             is_head = True
-        elif judge_head_coin_message(message) and is_head is True:
+        elif judge_coin_message(message) and is_head is True:
             is_head = False
             head_coin_sum += 1
             text_str = "赢硬币:" + str(head_coin_sum) + "   输硬币:" + str(tail_coin_sum)
@@ -189,7 +182,7 @@ def comparison_coin():
         elif is_head is True:
             message = 1 - get_hamming_dist(tail_coin_dhash, get_dhash(coin)) * 1. / (32 * 32 / 4)
             # print("输   ", message)
-            if judge_tail_coin_message(message):
+            if judge_coin_message(message):
                 is_head = False
                 tail_coin_sum += 1
                 text_str = "赢硬币:" + str(head_coin_sum) + "   输硬币:" + str(tail_coin_sum)
