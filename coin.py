@@ -1,3 +1,4 @@
+import os
 import time
 import win32api
 import win32gui
@@ -11,6 +12,9 @@ import threading as th
 import dhash
 from configparser import ConfigParser
 import webbrowser
+import tailCoin
+import headCoin
+import base64
 
 # num = 0
 p = ""
@@ -170,10 +174,12 @@ def comparison_coin():
         # if is_head is True:
         #     print("赢   ", message, end="\t")
         if judge_coin_message(message) and is_head is False:
+            # print("开始识别：", end="\n")
             is_head_time = time.time() + 4
             time.sleep(1)
             is_head = True
         elif judge_coin_message(message) and is_head is True:
+            # print("\n赢赢赢", end="\n\n")
             is_head = False
             head_coin_sum += 1
             text_str = "赢硬币:" + str(head_coin_sum) + "   输硬币:" + str(tail_coin_sum)
@@ -181,8 +187,9 @@ def comparison_coin():
             time.sleep(5)
         elif is_head is True:
             message = 1 - get_hamming_dist(tail_coin_dhash, get_dhash(coin)) * 1. / (32 * 32 / 4)
-            # print("输   ", message)
+            # print("输   ", message, end="\t")
             if judge_coin_message(message):
+                # print("\n输输输", end="\n\n")
                 is_head = False
                 tail_coin_sum += 1
                 text_str = "赢硬币:" + str(head_coin_sum) + "   输硬币:" + str(tail_coin_sum)
@@ -369,6 +376,12 @@ def read_ini():
 
 
 if __name__ == '__main__':
+    with open(r'./image/headCoin.png', 'wb') as f:
+        f.write(base64.b64decode(headCoin.true))
+    with open(r'./image/tailCoin.png', 'wb') as f:
+        f.write(base64.b64decode(tailCoin.false))
     read_ini()
     start()
     tk_gui()
+    os.remove('./image/headCoin.png')
+    os.remove('./image/tailCoin.png')
