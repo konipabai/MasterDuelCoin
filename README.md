@@ -85,6 +85,6 @@
 
 **⑨** 如果同时打开了两个插件，关闭其中一个，另一个不会正常运行，需要两个都关闭再打开一个才能正常运行。
 
-**⑩** 本人大学生萌新，接触的相关插件不多，对github的使用也不多，如有何处冒犯或者更好的建议，可以直接**[issue](https://github.com/konipabai/MasterDuelCoin/issues)**或**[B站](https://space.bilibili.com/29666002)**联系，记得带上涉及问题的截图。
+**⑩** 本人大学生萌新，接触的相关插件不多，对github的使用也不多，如有何处冒犯或者更好的建议，可以直接[issue](https://github.com/konipabai/MasterDuelCoin/issues)或[B站](https://space.bilibili.com/29666002)联系，记得带上涉及问题的截图。
 
 最后感谢你的支持！可以的话为我点个 Star 吧！
