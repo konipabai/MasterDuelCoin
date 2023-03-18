@@ -15,6 +15,8 @@ import webbrowser
 import tailCoin
 import headCoin
 import base64
+import logging
+import traceback
 
 # num = 0
 p = ""
@@ -48,6 +50,7 @@ font_minus_button = ""
 bug_text = ""
 bili_button = ""
 github_button = ""
+logging.basicConfig(filename='log.txt', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 # 得到游戏界面截图
@@ -99,9 +102,12 @@ def get_window_screen_shot_image(hwnd: int):
 
     win32gui.DeleteObject(saveBitMap.GetHandle())
     saveDC.DeleteDC()
-    mfcDC.DeleteDC()
+    # 如果在这句代码前关闭了游戏程序，那这里将因为没有游戏程序则不能删除
+    try:
+        mfcDC.DeleteDC()
+    except win32ui.error:
+        pass
     win32gui.ReleaseDC(hwnd, hwndDC)
-
     if result != 1:
         return False
     else:
@@ -164,43 +170,46 @@ def judge_coin_message(message):
 def comparison_coin():
     global tail_coin_sum, head_coin_sum, show_text, is_head, is_head_time
     # global num
-    hwnd = find_master_duel("masterduel")
-    coin = cut_master_duel_coin_message_image(hwnd)
-    # num += 1
-    if not coin:
-        start()
-    else:
-        message = 1 - get_hamming_dist(head_coin_dhash, get_dhash(coin)) * 1. / (32 * 32 / 4)
-        # if is_head is True:
-        #     print("赢   ", message, end="\t")
-        if judge_coin_message(message) and is_head is False:
-            # print("开始识别：", end="\n")
-            is_head_time = time.time() + 4
-            time.sleep(1)
-            is_head = True
-        elif judge_coin_message(message) and is_head is True:
-            # print("\n赢赢赢", end="\n\n")
-            is_head = False
-            head_coin_sum += 1
-            text_str = "赢硬币:" + str(head_coin_sum) + "   输硬币:" + str(tail_coin_sum)
-            show_text.set(text_str)
-            time.sleep(5)
-        elif is_head is True:
-            message = 1 - get_hamming_dist(tail_coin_dhash, get_dhash(coin)) * 1. / (32 * 32 / 4)
-            # print("输   ", message, end="\t")
-            if judge_coin_message(message):
-                # print("\n输输输", end="\n\n")
+    try:
+        hwnd = find_master_duel("masterduel")
+        coin = cut_master_duel_coin_message_image(hwnd)
+        # num += 1
+        if not coin:
+            start()
+        else:
+            message = 1 - get_hamming_dist(head_coin_dhash, get_dhash(coin)) * 1. / (32 * 32 / 4)
+            # if is_head is True:
+            #     print("赢   ", message, end="\t")
+            if judge_coin_message(message) and is_head is False:
+                # print("开始识别：", end="\n")
+                is_head_time = time.time() + 4
+                time.sleep(1)
+                is_head = True
+            elif judge_coin_message(message) and is_head is True:
+                # print("\n赢赢赢", end="\n\n")
                 is_head = False
-                tail_coin_sum += 1
+                head_coin_sum += 1
                 text_str = "赢硬币:" + str(head_coin_sum) + "   输硬币:" + str(tail_coin_sum)
                 show_text.set(text_str)
                 time.sleep(5)
-            else:
-                is_head_time_now = time.time()
-                if is_head_time_now >= is_head_time:
+            elif is_head is True:
+                message = 1 - get_hamming_dist(tail_coin_dhash, get_dhash(coin)) * 1. / (32 * 32 / 4)
+                # print("输   ", message, end="\t")
+                if judge_coin_message(message):
+                    # print("\n输输输", end="\n\n")
                     is_head = False
-                    is_head_time = 0
-        start()
+                    tail_coin_sum += 1
+                    text_str = "赢硬币:" + str(head_coin_sum) + "   输硬币:" + str(tail_coin_sum)
+                    show_text.set(text_str)
+                    time.sleep(5)
+                else:
+                    is_head_time_now = time.time()
+                    if is_head_time_now >= is_head_time:
+                        is_head = False
+                        is_head_time = 0
+            start()
+    except:
+        logging.debug(traceback.format_exc())
 
 
 # 增加一次赢硬币的按钮
